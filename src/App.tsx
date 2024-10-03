@@ -1,53 +1,67 @@
-import { Redirect, Route } from 'react-router-dom';
-import { IonApp, IonRouterOutlet, setupIonicReact } from '@ionic/react';
-import { IonReactRouter } from '@ionic/react-router';
-import Home from './pages/Home';
+import React, { useEffect, useState } from 'react';
+import { CapacitorSQLite, capSQLiteValues, SQLiteDBConnection } from '@capacitor-community/sqlite';
 
-/* Core CSS required for Ionic components to work properly */
-import '@ionic/react/css/core.css';
+const App: React.FC = () => {
+  const [data, setData] = useState<any[]>([]);
+  const [isDatabase, setIsDB]:any = useState();
 
-/* Basic CSS for apps built with Ionic */
-import '@ionic/react/css/normalize.css';
-import '@ionic/react/css/structure.css';
-import '@ionic/react/css/typography.css';
+  useEffect(() => {
+    const initializeDB = async () => {
+      // Crear conexión a la base de datos
+      setIsDB(JSON.stringify('creando'));
+      await CapacitorSQLite.createConnection({
+        database: 'undis.db',
+        // databasePath: 'undis.db',
+      });
+      setIsDB(JSON.stringify('creado'));
+      // await database.open(); // Abrir la conexión
+      await CapacitorSQLite.query({database: 'undis.db', statement: 'CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, value TEXT)'});
+      // Crear tabla si no existe
+      setIsDB(JSON.stringify('abierto'));
+    };
 
-/* Optional CSS utils that can be commented out */
-import '@ionic/react/css/padding.css';
-import '@ionic/react/css/float-elements.css';
-import '@ionic/react/css/text-alignment.css';
-import '@ionic/react/css/text-transformation.css';
-import '@ionic/react/css/flex-utils.css';
-import '@ionic/react/css/display.css';
+    initializeDB();
 
-/**
- * Ionic Dark Mode
- * -----------------------------------------------------
- * For more info, please see:
- * https://ionicframework.com/docs/theming/dark-mode
- */
+  }, []);
+  const addData = async () => {
+      // Aquí puedes crear tablas o insertar datos
+    fetch('http://192.168.100.12:3000/api/check-list',{
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: 'foo',
+        body: 'bar',
+        userId: 1,
+        status:true,
+      }),
+    })
+    setData([{name: 'nombre', value: 'valor'}]);
+    setTimeout(() => {
+      setData([]);
+    }, 1000);
+    await new Promise(res => setTimeout(res, 2000));
+    await CapacitorSQLite.query({database: 'undis.db', statement: 'INSERT INTO users (name, value) VALUES (?, ?)', values: ['nombre', 'valor']});
+    // await db.run('INSERT INTO users (name, value) VALUES (?, ?)', ['nombre', 'valor']);
+    let result:capSQLiteValues = await CapacitorSQLite.query({database: 'undis.db', statement: 'SELECT * FROM users'});
+    setData([result.values]);
+    // const result:any = await db.query('SELECT * FROM users');      
+  };
 
-/* import '@ionic/react/css/palettes/dark.always.css'; */
-/* import '@ionic/react/css/palettes/dark.class.css'; */
-import '@ionic/react/css/palettes/dark.system.css';
+  return (
+    <div>
+      <h1>TEST UNDIS</h1>
+      <div>"DB"{isDatabase}"DB"</div>
+      <button onClick={addData}>Agregar Data</button>
+      <ul>
+        {data.map((item, index) => (
+          <li key={index}>{JSON.stringify(item)}</li>
+        ))}
+      </ul>
 
-/* Theme variables */
-import './theme/variables.css';
-
-setupIonicReact();
-
-const App: React.FC = () => (
-  <IonApp>
-    <IonReactRouter>
-      <IonRouterOutlet>
-        <Route exact path="/home">
-          <Home />
-        </Route>
-        <Route exact path="/">
-          <Redirect to="/home" />
-        </Route>
-      </IonRouterOutlet>
-    </IonReactRouter>
-  </IonApp>
-);
+    </div>
+  );
+};
 
 export default App;
