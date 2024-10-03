@@ -16,7 +16,7 @@ class SQLiteService {
 
       // CREAR TABLE
       await this.createTable();
-      return result;
+      return "connected";
     } catch (error: any) {
       return error.message;
     }
@@ -34,7 +34,7 @@ class SQLiteService {
     await CapacitorSQLite.query({
       database: "undis.db",
       statement: "INSERT INTO users (name, value) VALUES (?, ?)",
-      values: ["nombre", "valor"],
+      values: [name, value],
     });
   }
 

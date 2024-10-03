@@ -40,6 +40,7 @@ const App: React.FC = () => {
       // await db.isDBOpen()
       // setIsDB(JSON.stringify(db));
       let resDB = await sqliteService.initDB()
+      setIsDB(resDB);
       // Crear tabla si no existe
     };
     initializeDB();
