@@ -1,51 +1,55 @@
 // db/SQLiteService.ts
-import {
-  CapacitorSQLite,
-  SQLiteDBConnection,
-} from "@capacitor-community/sqlite";
+import { CapacitorSQLite } from "@capacitor-community/sqlite";
 
 class SQLiteService {
-  private db: SQLiteDBConnection | any = null;
-
   async initDB() {
-    // Crear conexión a la base de datos
-    await CapacitorSQLite.createConnection({
-      database: "mydatabase.db",
-    });
+    try {
+      let result = await CapacitorSQLite.isDBExists({ database: "undis.db" });
+      if (result?.result) {
+        return "exists DB";
+      }
+      await CapacitorSQLite.createConnection({
+        database: "undis.db",
+        // databasePath: 'undis.db',
+      });
+      await CapacitorSQLite.open({ database: "undis.db" }); // Abrir la conexión
 
-    // Obtener la conexión
-    this.db = await CapacitorSQLite.isDatabase({ database: "mydatabase.db" });
-
-    // Crear la tabla
-    await this.createTable();
+      // CREAR TABLE
+      await this.createTable();
+      return result;
+    } catch (error: any) {
+      return error.message;
+    }
   }
 
   async createTable() {
-    const createTableQuery = `
-      CREATE TABLE IF NOT EXISTS my_table (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT,
-        value TEXT
-      )
-    `;
-    await this.db?.execute(createTableQuery);
+    await CapacitorSQLite.execute({
+      database: "undis.db",
+      statements:
+        "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, value TEXT)",
+    });
   }
 
   async addData(name: string, value: string) {
-    const insertQuery = `INSERT INTO my_table (name, value) VALUES (?, ?)`;
-    await this.db?.run(insertQuery, [name, value]);
+    await CapacitorSQLite.query({
+      database: "undis.db",
+      statement: "INSERT INTO users (name, value) VALUES (?, ?)",
+      values: ["nombre", "valor"],
+    });
   }
 
   async getData() {
-    const selectQuery = `SELECT * FROM my_table`;
-    const result = await this.db?.query(selectQuery);
-    return result?.values || [];
+    let result: any = await CapacitorSQLite.query({
+      database: "undis.db",
+      statement: "SELECT * FROM users order by id desc limit 5",
+      values: [],
+    });
+    return result.values;
   }
 
   async closeDB() {
-    if (this.db) {
-      await this.db.close();
-      this.db = null;
+    if (await CapacitorSQLite.isDBOpen({ database: "undis.db" })) {
+      await CapacitorSQLite.close({ database: "undis.db" });
     }
   }
 }

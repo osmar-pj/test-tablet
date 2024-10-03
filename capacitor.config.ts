@@ -3,7 +3,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 const config: CapacitorConfig = {
   appId: "com.example.app",
   appName: "undis-ionic",
-  webDir: "build",
+  webDir: "dist",
   plugins: {
     CapacitorSQLite: {
       iosDatabaseLocation: "Library/CapacitorDatabase",
